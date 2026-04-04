@@ -11,6 +11,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.example.fintrack.ui.home.HomeScreen
 import com.example.fintrack.ui.transactions.AddEditTransactionScreen
+import com.example.fintrack.ui.transactions.TransactionScreen
 import com.example.fintrack.viewmodel.TransactionViewModel
 
 // ─── Routes ───────────────────────────────────────────────────────────────────
@@ -75,8 +76,16 @@ fun FinTrackNavGraph(
             )
         }
 
-        composable(Screen.AddTransaction.route) {
-            // AddTransactionScreen will go here
+        composable(Screen.Transactions.route) {
+            TransactionScreen(
+                viewModel = viewModel,
+                onAddTransaction = {
+                    navController.navigate(Screen.AddTransaction.route)
+                },
+                onEditTransaction = { id ->
+                    navController.navigate(Screen.EditTransaction.createRoute(id))
+                }
+            )
         }
 
         composable(
