@@ -10,6 +10,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.example.fintrack.ui.home.HomeScreen
+import com.example.fintrack.ui.insights.InsightsScreen
 import com.example.fintrack.ui.transactions.AddEditTransactionScreen
 import com.example.fintrack.ui.transactions.TransactionScreen
 import com.example.fintrack.viewmodel.TransactionViewModel
@@ -107,7 +108,7 @@ fun FinTrackNavGraph(
         }
 
         composable(Screen.Insights.route) {
-            // InsightsScreen will go here
+            InsightsScreen(viewModel = viewModel)
         }
 
         composable(Screen.Streak.route) {
