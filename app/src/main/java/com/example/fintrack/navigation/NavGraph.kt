@@ -1,14 +1,16 @@
 package com.example.fintrack.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.fintrack.ui.home.HomeScreen
+import com.example.fintrack.ui.transactions.AddEditTransactionScreen
 import com.example.fintrack.viewmodel.TransactionViewModel
 
 // ─── Routes ───────────────────────────────────────────────────────────────────
@@ -66,8 +68,11 @@ fun FinTrackNavGraph(
             )
         }
 
-        composable(Screen.Transactions.route) {
-            // TransactionScreen will go here
+        composable(Screen.AddTransaction.route) {
+            AddEditTransactionScreen(
+                viewModel = viewModel,
+                onNavigateBack = { navController.popBackStack() }
+            )
         }
 
         composable(Screen.AddTransaction.route) {
@@ -81,7 +86,15 @@ fun FinTrackNavGraph(
             )
         ) { backStackEntry ->
             val transactionId = backStackEntry.arguments?.getInt("transactionId") ?: return@composable
-            // EditTransactionScreen will go here
+            val transactions by viewModel.allTransactions.collectAsState()
+            val transaction = transactions.find { it.id == transactionId }
+            transaction?.let {
+                AddEditTransactionScreen(
+                    viewModel = viewModel,
+                    existingTransaction = it,
+                    onNavigateBack = { navController.popBackStack() }
+                )
+            }
         }
 
         composable(Screen.Insights.route) {
