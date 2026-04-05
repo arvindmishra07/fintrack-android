@@ -8,7 +8,13 @@ FinTrack helps users understand their daily money habits in a simple and engagin
 
 ## 📱 Screenshots
 
+| Home | Transactions | Add Transaction |
+|------|-------------|-----------------|
+| ![Home](screenshots/screenshot_home.png) | ![Transactions](screenshots/screenshot_transactions.png) | ![Add](screenshots/screenshot_add_transaction.png) |
 
+| Insights | Streak |
+|----------|--------|
+| ![Insights](screenshots/screenshot_insights.png) | ![Streak](screenshots/screenshot_streak.png) |
 ---
 
 ## ✨ Features
