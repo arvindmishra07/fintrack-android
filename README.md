@@ -5,6 +5,9 @@ A personal finance companion app built with Kotlin and Jetpack Compose for Andro
 FinTrack helps users understand their daily money habits in a simple and engaging way. It is not a banking app — it is a lightweight finance companion designed for regular everyday use.
 
 ---
+## 🎬 Demo Video
+
+[Watch the full demo here](https://www.youtube.com/watch?v=ehdN_8uv1iM)
 
 ## 📱 Screenshots
 
