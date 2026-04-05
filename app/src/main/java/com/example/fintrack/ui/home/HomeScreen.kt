@@ -1,12 +1,29 @@
 package com.example.fintrack.ui.home
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -15,18 +32,34 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.fintrack.domain.model.TransactionType
-import com.example.fintrack.ui.components.*
-import com.example.fintrack.ui.theme.*
+import com.example.fintrack.ui.components.EmptyState
+import com.example.fintrack.ui.components.SummaryChip
+import com.example.fintrack.ui.components.SurfaceCard
+import com.example.fintrack.ui.components.TransactionItem
+import com.example.fintrack.ui.theme.AmberAccent
+import com.example.fintrack.ui.theme.BackgroundLight
+import com.example.fintrack.ui.theme.ExpenseRed
+import com.example.fintrack.ui.theme.GradientDarkEnd
+import com.example.fintrack.ui.theme.GradientDarkStart
+import com.example.fintrack.ui.theme.IncomeGreen
+import com.example.fintrack.ui.theme.NeutralDay
+import com.example.fintrack.ui.theme.PurpleLight
+import com.example.fintrack.ui.theme.PurplePrimary
+import com.example.fintrack.ui.theme.StreakFire
+import com.example.fintrack.ui.theme.TextOnDark
+import com.example.fintrack.ui.theme.TextPrimary
+import com.example.fintrack.ui.theme.TextSecondary
 import com.example.fintrack.viewmodel.TransactionViewModel
-import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Calendar
+import com.example.fintrack.viewmodel.TransactionViewModel.UiState
+import androidx.compose.ui.text.style.TextAlign
 
 @Composable
 fun HomeScreen(
     viewModel: TransactionViewModel,
     onAddTransaction: () -> Unit,
-    onEditTransaction: (Int) -> Unit
+    onEditTransaction: (Int) -> Unit,
+    onViewAllTransactions: () -> Unit
 ) {
     val balance by viewModel.currentBalance.collectAsState()
     val totalIncome by viewModel.totalIncome.collectAsState()
@@ -34,225 +67,291 @@ fun HomeScreen(
     val transactions by viewModel.allTransactions.collectAsState()
     val last7Days by viewModel.last7DaysExpenses.collectAsState()
     val streak by viewModel.noSpendStreak.collectAsState()
-
+    val uiState by viewModel.uiState.collectAsState()
     val recentTransactions = transactions.take(5)
 
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(BackgroundLight),
-        verticalArrangement = Arrangement.spacedBy(0.dp)
-    ) {
-        // ─── Header ───────────────────────────────────────────────────────
-        item {
+    when (uiState) {
+        is UiState.Loading -> {
             Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(
-                        brush = Brush.verticalGradient(
-                            colors = listOf(GradientDarkStart, GradientDarkEnd)
-                        )
-                    )
-                    .padding(top = 48.dp, start = 20.dp, end = 20.dp, bottom = 32.dp)
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
             ) {
-                Column {
-                    // Greeting
-                    val hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
-                    val greeting = when {
-                        hour < 12 -> "Good Morning"
-                        hour < 17 -> "Good Afternoon"
-                        else -> "Good Evening"
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    CircularProgressIndicator(color = PurplePrimary)
+                    Text(
+                        text = "Loading your finances...",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = TextSecondary
+                    )
+                }
+            }
+        }
+
+        is UiState.Error -> {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier.padding(32.dp)
+                ) {
+                    Text(text = "⚠️", fontSize = 48.sp)
+                    Text(
+                        text = "Something went wrong",
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = TextPrimary
+                    )
+                    Text(
+                        text = (uiState as UiState.Error).message,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = TextSecondary,
+                        textAlign = TextAlign.Center
+                    )
+                    Button(
+                        onClick = { },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = PurplePrimary
+                        )
+                    ) {
+                        Text("Try Again", color = Color.White)
                     }
+                }
+            }
+        }
 
-                    Text(
-                        text = "$greeting 👋",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = TextOnDark.copy(alpha = 0.7f)
-                    )
-
-                    Spacer(modifier = Modifier.height(4.dp))
-
-                    Text(
-                        text = "FinTrack",
-                        style = MaterialTheme.typography.headlineLarge,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = TextOnDark
-                    )
-
-                    Spacer(modifier = Modifier.height(24.dp))
-
-                    // Balance Card
+        is UiState.Success -> {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(BackgroundLight),
+                verticalArrangement = Arrangement.spacedBy(0.dp)
+            ) {
+                // ─── Header ───────────────────────────────────────────────────────
+                item {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(24.dp))
                             .background(
-                                brush = Brush.linearGradient(
-                                    colors = listOf(PurplePrimary, PurpleLight)
+                                brush = Brush.verticalGradient(
+                                    colors = listOf(GradientDarkStart, GradientDarkEnd)
                                 )
                             )
-                            .padding(24.dp)
+                            .padding(top = 48.dp, start = 20.dp, end = 20.dp, bottom = 32.dp)
                     ) {
                         Column {
+                            val hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
+                            val greeting = when {
+                                hour < 12 -> "Good Morning"
+                                hour < 17 -> "Good Afternoon"
+                                else -> "Good Evening"
+                            }
+
                             Text(
-                                text = "Total Balance",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = TextOnDark.copy(alpha = 0.8f)
+                                text = "$greeting 👋",
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = TextOnDark.copy(alpha = 0.7f)
                             )
 
-                            Spacer(modifier = Modifier.height(8.dp))
+                            Spacer(modifier = Modifier.height(4.dp))
 
                             Text(
-                                text = "₹${String.format("%,.2f", balance)}",
-                                style = MaterialTheme.typography.displayMedium,
+                                text = "FinTrack",
+                                style = MaterialTheme.typography.headlineLarge,
                                 fontWeight = FontWeight.ExtraBold,
                                 color = TextOnDark
                             )
 
-                            Spacer(modifier = Modifier.height(20.dp))
+                            Spacer(modifier = Modifier.height(24.dp))
 
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(24.dp))
+                                    .background(
+                                        brush = Brush.linearGradient(
+                                            colors = listOf(PurplePrimary, PurpleLight)
+                                        )
+                                    )
+                                    .padding(24.dp)
                             ) {
-                                SummaryChip(
-                                    label = "Income",
-                                    amount = totalIncome,
-                                    emoji = "📈",
-                                    backgroundColor = IncomeGreen.copy(alpha = 0.3f),
-                                    modifier = Modifier.weight(1f)
-                                )
-                                SummaryChip(
-                                    label = "Expense",
-                                    amount = totalExpense,
-                                    emoji = "📉",
-                                    backgroundColor = ExpenseRed.copy(alpha = 0.3f),
-                                    modifier = Modifier.weight(1f)
-                                )
+                                Column {
+                                    Text(
+                                        text = "Total Balance",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = TextOnDark.copy(alpha = 0.8f)
+                                    )
+
+                                    Spacer(modifier = Modifier.height(8.dp))
+
+                                    Text(
+                                        text = "₹${String.format("%,.2f", balance)}",
+                                        style = MaterialTheme.typography.displayMedium,
+                                        fontWeight = FontWeight.ExtraBold,
+                                        color = TextOnDark
+                                    )
+
+                                    Spacer(modifier = Modifier.height(20.dp))
+
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                    ) {
+                                        SummaryChip(
+                                            label = "Income",
+                                            amount = totalIncome,
+                                            emoji = "📈",
+                                            backgroundColor = IncomeGreen.copy(alpha = 0.3f),
+                                            modifier = Modifier.weight(1f)
+                                        )
+                                        SummaryChip(
+                                            label = "Expense",
+                                            amount = totalExpense,
+                                            emoji = "📉",
+                                            backgroundColor = ExpenseRed.copy(alpha = 0.3f),
+                                            modifier = Modifier.weight(1f)
+                                        )
+                                    }
+                                }
                             }
                         }
                     }
                 }
-            }
-        }
 
-        // ─── Streak Banner ────────────────────────────────────────────────
-        item {
-            if (streak > 0) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 20.dp, vertical = 12.dp)
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(
-                            brush = Brush.linearGradient(
-                                colors = listOf(
-                                    StreakFire.copy(alpha = 0.15f),
-                                    AmberAccent.copy(alpha = 0.15f)
+                item {
+                    if (streak > 0) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 20.dp, vertical = 12.dp)
+                                .clip(RoundedCornerShape(16.dp))
+                                .background(
+                                    brush = Brush.linearGradient(
+                                        colors = listOf(
+                                            StreakFire.copy(alpha = 0.15f),
+                                            AmberAccent.copy(alpha = 0.15f)
+                                        )
+                                    )
                                 )
-                            )
-                        )
-                        .padding(16.dp)
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        Text(text = "🔥", fontSize = 32.sp)
-                        Column {
-                            Text(
-                                text = "$streak day no-spend streak!",
-                                style = MaterialTheme.typography.bodyLarge,
-                                fontWeight = FontWeight.Bold,
-                                color = StreakFire
-                            )
-                            Text(
-                                text = "Keep it going, you're doing great!",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = TextSecondary
-                            )
+                                .padding(16.dp)
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                Text(text = "🔥", fontSize = 32.sp)
+                                Column {
+                                    Text(
+                                        text = "$streak day no-spend streak!",
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        fontWeight = FontWeight.Bold,
+                                        color = StreakFire
+                                    )
+                                    Text(
+                                        text = "Keep it going, you're doing great!",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = TextSecondary
+                                    )
+                                }
+                            }
                         }
                     }
                 }
-            }
-        }
 
-        // ─── Weekly Spending Chart ────────────────────────────────────────
-        item {
-            SurfaceCard(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 8.dp)
-            ) {
-                Text(
-                    text = "Last 7 Days",
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = TextPrimary
-                )
+                item {
+                    SurfaceCard(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 20.dp, vertical = 8.dp)
+                    ) {
+                        Text(
+                            text = "Last 7 Days",
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = TextPrimary
+                        )
 
-                Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(16.dp))
 
-                if (last7Days.isEmpty() || last7Days.all { it.second == 0.0 }) {
-                    EmptyState(
-                        emoji = "📊",
-                        title = "No spending yet",
-                        subtitle = "Your weekly chart will appear here"
-                    )
+                        if (last7Days.isEmpty() || last7Days.all { it.second == 0.0 }) {
+                            EmptyState(
+                                emoji = "📊",
+                                title = "No spending yet",
+                                subtitle = "Your weekly chart will appear here"
+                            )
+                        } else {
+                            WeeklyBarChart(data = last7Days)
+                        }
+                    }
+                }
+
+                item {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 20.dp, vertical = 12.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Recent Transactions",
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = TextPrimary
+                        )
+
+                        Text(
+                            text = "See all →",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = PurplePrimary,
+                            fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier.clickable { onViewAllTransactions() }
+                        )
+                    }
+                }
+
+                if (recentTransactions.isEmpty()) {
+                    item {
+                        EmptyState(
+                            emoji = "💸",
+                            title = "No transactions yet",
+                            subtitle = "Tap the + button to add your first transaction",
+                            modifier = Modifier.padding(vertical = 32.dp)
+                        )
+                    }
                 } else {
-                    WeeklyBarChart(data = last7Days)
+                    items(recentTransactions) { transaction ->
+                        TransactionItem(
+                            transaction = transaction,
+                            onEdit = { onEditTransaction(it.id) },
+                            onDelete = { viewModel.deleteTransaction(it) }
+                        )
+                    }
+                }
+
+                item {
+                    Spacer(modifier = Modifier.height(80.dp))
                 }
             }
-        }
 
-        // ─── Recent Transactions Header ───────────────────────────────────
-        item {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 12.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.BottomEnd
             ) {
-                Text(
-                    text = "Recent Transactions",
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = TextPrimary
-                )
-
-                Text(
-                    text = "See all →",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = PurplePrimary,
-                    fontWeight = FontWeight.SemiBold
-                )
+                FloatingActionButton(
+                    onClick = onAddTransaction,
+                    modifier = Modifier.padding(24.dp),
+                    containerColor = PurplePrimary,
+                    contentColor = Color.White
+                ) {
+                    Text(text = "+", fontSize = 28.sp, fontWeight = FontWeight.Light)
+                }
             }
-        }
-
-        // ─── Recent Transactions List ─────────────────────────────────────
-        if (recentTransactions.isEmpty()) {
-            item {
-                EmptyState(
-                    emoji = "💸",
-                    title = "No transactions yet",
-                    subtitle = "Tap the + button to add your first transaction",
-                    modifier = Modifier.padding(vertical = 32.dp)
-                )
-            }
-        } else {
-            items(recentTransactions) { transaction ->
-                TransactionItem(
-                    transaction = transaction,
-                    onEdit = { onEditTransaction(it.id) },
-                    onDelete = { viewModel.deleteTransaction(it) }
-                )
-            }
-        }
-
-        // ─── Add Transaction FAB space ────────────────────────────────────
-        item {
-            Spacer(modifier = Modifier.height(80.dp))
         }
     }
 

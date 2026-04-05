@@ -67,6 +67,9 @@ fun FinTrackNavGraph(
                 },
                 onEditTransaction = { id ->
                     navController.navigate(Screen.EditTransaction.createRoute(id))
+                },
+                onViewAllTransactions = {
+                    navController.navigate(Screen.Transactions.route)
                 }
             )
         }

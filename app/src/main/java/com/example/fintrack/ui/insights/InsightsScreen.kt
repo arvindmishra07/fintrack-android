@@ -33,7 +33,8 @@ fun InsightsScreen(viewModel: TransactionViewModel) {
     val totalIncome by viewModel.totalIncome.collectAsState()
     val totalExpense by viewModel.totalExpense.collectAsState()
     val last7Days by viewModel.last7DaysExpenses.collectAsState()
-
+    val monthlyExpenses by viewModel.monthlyExpenses.collectAsState()
+    val mostFrequentCategory by viewModel.mostFrequentCategory.collectAsState()
     val topCategory = expenseByCategory.maxByOrNull { it.value }
     val savingsRate = if (totalIncome > 0)
         ((totalIncome - totalExpense) / totalIncome * 100).coerceIn(0.0, 100.0)
@@ -406,6 +407,170 @@ fun InsightsScreen(viewModel: TransactionViewModel) {
         }
 
         item { Spacer(modifier = Modifier.height(80.dp)) }
+        // ─── Most Frequent Category ───────────────────────────────────────────────
+        mostFrequentCategory?.let { category ->
+            item {
+                SurfaceCard(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp, vertical = 4.dp)
+                ) {
+                    Text(
+                        text = "Most Frequent Category",
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = TextPrimary
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(56.dp)
+                                .clip(RoundedCornerShape(16.dp))
+                                .background(
+                                    getCategoryColor(category).copy(alpha = 0.15f)
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(text = category.emoji, fontSize = 28.sp)
+                        }
+
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = category.displayName,
+                                style = MaterialTheme.typography.headlineSmall,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = TextPrimary
+                            )
+                            Text(
+                                text = "You spend here most often",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = TextSecondary
+                            )
+                        }
+
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(
+                                    getCategoryColor(category).copy(alpha = 0.15f)
+                                )
+                                .padding(horizontal = 10.dp, vertical = 6.dp)
+                        ) {
+                            Text(
+                                text = "Most used",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = getCategoryColor(category),
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+// ─── Monthly Trend ────────────────────────────────────────────────────────
+        item {
+            SurfaceCard(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp, vertical = 4.dp)
+            ) {
+                Text(
+                    text = "Monthly Trend",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = TextPrimary
+                )
+
+                Text(
+                    text = "Last 6 months expenses",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = TextSecondary
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                if (monthlyExpenses.isEmpty() || monthlyExpenses.all { it.second == 0.0 }) {
+                    EmptyState(
+                        emoji = "📅",
+                        title = "No monthly data yet",
+                        subtitle = "Your monthly trend will appear here"
+                    )
+                } else {
+                    val maxValue = monthlyExpenses.maxOfOrNull { it.second }
+                        ?.takeIf { it > 0 } ?: 1.0
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(160.dp),
+                        horizontalArrangement = Arrangement.SpaceEvenly,
+                        verticalAlignment = Alignment.Bottom
+                    ) {
+                        monthlyExpenses.forEach { (month, amount) ->
+                            val barFraction = (amount / maxValue).toFloat()
+
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Bottom,
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                if (amount > 0) {
+                                    Text(
+                                        text = "₹${amount.toInt()}",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = TextSecondary,
+                                        fontSize = 8.sp
+                                    )
+                                }
+
+                                Spacer(modifier = Modifier.height(4.dp))
+
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth(0.6f)
+                                        .fillMaxHeight(
+                                            if (barFraction > 0f)
+                                                barFraction.coerceAtLeast(0.05f)
+                                            else 0.05f
+                                        )
+                                        .clip(
+                                            RoundedCornerShape(
+                                                topStart = 6.dp,
+                                                topEnd = 6.dp
+                                            )
+                                        )
+                                        .background(
+                                            brush = Brush.verticalGradient(
+                                                colors = if (amount > 0)
+                                                    listOf(TealAccent, TealDark)
+                                                else
+                                                    listOf(NeutralDay, NeutralDay)
+                                            )
+                                        )
+                                )
+
+                                Spacer(modifier = Modifier.height(4.dp))
+
+                                Text(
+                                    text = month,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = TextSecondary,
+                                    fontSize = 10.sp
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
