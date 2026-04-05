@@ -53,6 +53,8 @@ import com.example.fintrack.viewmodel.TransactionViewModel
 import java.util.Calendar
 import com.example.fintrack.viewmodel.TransactionViewModel.UiState
 import androidx.compose.ui.text.style.TextAlign
+import com.example.fintrack.ui.theme.TealAccent
+import com.example.fintrack.ui.theme.TealDark
 
 @Composable
 fun HomeScreen(
@@ -262,7 +264,68 @@ fun HomeScreen(
                         }
                     }
                 }
+// ─── Savings Progress ─────────────────────────────────────────────────────
+                item {
+                    val savingsRate = if (totalIncome > 0)
+                        ((balance / totalIncome) * 100).coerceIn(0.0, 100.0)
+                    else 0.0
 
+                    SurfaceCard(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 20.dp, vertical = 4.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column {
+                                Text(
+                                    text = "Savings Progress",
+                                    style = MaterialTheme.typography.headlineSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = TextPrimary
+                                )
+                                Text(
+                                    text = "₹${String.format("%,.2f", balance)} saved of ₹${
+                                        String.format("%,.2f", totalIncome)
+                                    }",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = TextSecondary
+                                )
+                            }
+                            Text(
+                                text = "${savingsRate.toInt()}%",
+                                style = MaterialTheme.typography.headlineSmall,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = TealAccent
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(10.dp)
+                                .clip(RoundedCornerShape(5.dp))
+                                .background(TealAccent.copy(alpha = 0.15f))
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth((savingsRate / 100).toFloat())
+                                    .fillMaxHeight()
+                                    .clip(RoundedCornerShape(5.dp))
+                                    .background(
+                                        brush = Brush.horizontalGradient(
+                                            colors = listOf(TealAccent, TealDark)
+                                        )
+                                    )
+                            )
+                        }
+                    }
+                }
                 item {
                     SurfaceCard(
                         modifier = Modifier
